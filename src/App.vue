@@ -64,14 +64,21 @@ const removerevent = (index) => {
   events.value.splice(index, 1);
 };
 
+const formatToGoogleCalendarDate = (date) => {
+  const dt = new Date(date); // Criar objeto Date
+  return dt.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"; 
+};
+
+
+
 // ?? Enviar events para o Supabase
 const createEvents = async () => {
   if (events.value.length === 0) return;
-
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   carregando.value = true;
   try {
     const eventsLinks = events.value.map(event => {
-      const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${event.title}&details=${event.description}&dates=${event.start}/${event.end}`;
+      const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${event.title}&details=${event.description}&dates=${formatToGoogleCalendarDate(event.start)}/${formatToGoogleCalendarDate(event.end)}&ctz=${userTimeZone}`;
       return {
         title: event.title,
         description: event.description,
@@ -215,26 +222,38 @@ const changePage = (page) => {
       <!-- ?? Lista de eventos criados -->
       <h3 class="text-lg font-medium mt-6">Listagem de eventos criados</h3>
       <ul class="space-y-4">
-        <li v-for="event in eventsCreated" :key="event.id" class=" bg-gray-800 flex justify-between items-cente p-4 rounded-lg">
+      <li v-for="event in eventsCreated" :key="event.id" 
+          class="bg-gray-800 flex flex-col sm:flex-row gap-2 justify-between items-center p-4 rounded-lg">
+        
+        <!-- Conteúdo do evento -->
+        <div class="flex flex-col flex-grow">
+          <span class="text-lg font-semibold">Criado em {{ formatDate(event.created_at) }}</span>
+          <span class="text-lg font-semibold">Título: {{ event.title }}</span>
 
-          <div>
-            <span class="text-lg font-semibold">Criado em {{ formatDate(event.created_at)}}</span>
-            <br>
-            <span class="text-lg font-semibold">Título: {{ event.title }}</span>
-            <br />
-            <span class="text-lg font-semibold">Descrição: {{ event.description }}</span>
-            <br/>
-            <a :href="event.link" target="_blank" class="text-blue-500">Ver Evento</a>
-          </div>
-          <div class="flex gap-2">
-            <button @click="copiarLink(event.link)" class=" bg-sky-500 text-white rounded-lg">Copiar link</button>
-            <div v-if="showFeedback" class="mt-2 text-green-500">
-      Link copiado com sucesso!
-    </div>
-            <button @click="deleteEvent(event.id)" class=" bg-red-500 text-white rounded-lg">Deletar</button>
-          </div>
-        </li>
-      </ul>
+          <span class="text-lg font-semibold">
+            Descrição: 
+            <span :class="{'line-clamp-2': !event.showMore}">{{ event.description }}</span>
+            <button @click="event.showMore = !event.showMore" class="text-blue-300 mb-2">
+              {{ event.showMore ? 'Ver menos' : 'Ver mais' }}
+            </button>
+          </span>
+
+          <a :href="event.link" target="_blank" class="text-sky-500">Acessar o Evento</a>
+        </div>
+
+        <!-- Botões fixos -->
+        <div class="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+          <button @click="copiarLink(event.link)" class="bg-sky-500 text-white rounded-lg w-32 py-2">
+            Copiar link
+          </button>
+          <button @click="deleteEvent(event.id)" class="bg-red-500 text-white rounded-lg w-32 py-2">
+            Deletar
+          </button>
+        </div>
+
+      </li>
+    </ul>
+
 
       <!-- ?? Paginação -->
       <div class="flex justify-center space-x-4 mt-6">
