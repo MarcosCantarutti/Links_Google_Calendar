@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import supabase from './supabase'; // Supabase client
+import supabase from './supabase'; 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Swal from 'sweetalert2';
