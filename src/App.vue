@@ -77,6 +77,25 @@ const createEvents = async () => {
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   carregando.value = true;
   try {
+    const validEvents = events.value.filter(event => 
+      event.title && event.description && event.start && event.end
+    );
+
+    if (validEvents.length === 0) {
+      Swal.fire({
+        position: "top-end",
+        title: 'Atenção!',
+        text: 'Favor informar todos os campos!',
+        showConfirmButton: false, 
+        timer: 1500, 
+        timerProgressBar: true, 
+      });
+
+      carregando.value = false;
+      return;
+    }
+
+
     const eventsLinks = events.value.map(event => {
       const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${event.title}&details=${event.description}&dates=${formatToGoogleCalendarDate(event.start)}/${formatToGoogleCalendarDate(event.end)}&ctz=${userTimeZone}`;
       return {
@@ -179,25 +198,25 @@ const changePage = (page) => {
         <input v-model="email" type="email" placeholder="E-mail" class="w-full px-4 py-2 border rounded-lg" />
         <input v-model="password" type="password" placeholder="Password" class="w-full px-4 py-2 border rounded-lg" />
       </div>
-      <button @click="login" class="w-full py-2 bg-blue-500 text-white rounded-lg">Login</button>
+      <button @click="login" class="w-full py-2 bg-slate-300 text-stone-900 rounded-lg">Login</button>
       <p v-if="authError" class="text-red-500 text-center">{{ authError }}</p>
     </div>
 
     <!-- ?? Dashboard -->
     <div v-else class="space-y-6">
-      <div class="flex justify-start gap-2 items-center">
+      <div class="flex justify-start gap-2 items-center border-b-2">
         <h2 class="text-xl font-semibold">Bem-vindo, {{ user.email }}</h2>
-        <button @click="logout" class=" bg-red-600 text-white rounded-lg">Sair</button>
+        <button @click="logout" class=" bg-red-600 text-white rounded-lg mb-2 ">Sair</button>
       </div>
 
 
-      <h3 class="text-lg font-medium">Criando eventos - Ao utilizar no botão "Adicionar formulário de evento", é adicionado um formulário com dados do evento. Pode ser criado um ou mais de uma vez, em seguida será listado com os devidos links públicos para o usuário conseguir criar o evento no próprio calendário pessoal da conta.</h3>
-      <button @click="addEvent" class="py-2 px-4 bg-green-600 text-white rounded-lg">Adicionar formulário de evento</button>
+      <h3 class="text-lg font-medium"><b>Criando eventos </b><br/>Ao utilizar no botão "Adicionar formulário de evento", é criado um formulário para preenchimento com os dados do evento. Pode ser criado um ou mais de uma vez, em seguida será listado com os devidos links públicos para o usuário conseguir criar o evento no próprio calendário pessoal da conta.</h3>
+      <button @click="addEvent" class="py-2 px-4 bg-sky-600 mx-auto block   text-white rounded-lg">Adicionar formulário de evento</button>
 
       <!-- Container flexível -->
-      <div class="flex flex-wrap gap-2 justify-center items-center">
+      <div class="flex flex-wrap gap-2 justify-center items-center border-t-2 mt-4 mb-4 border-b-2">
         <!-- Cada evento será uma "card" com um estilo responsivo -->
-        <div v-for="(event, index) in events" :key="index" class="bg-gray-800 p-4 rounded-lg my-2 w-full sm:w-1/2 lg:w-1/3 xl:w-1/4">
+        <div v-for="(event, index) in events" :key="index" class="bg-gray-800 p-4 rounded-lg my-2 w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 ">
           <h2 class="text-center mb-1">Evento</h2>
 
           <input v-model="event.title" placeholder="Título do evento" class="w-full p-2 border border-gray-300 rounded-lg mb-2" />
@@ -215,8 +234,8 @@ const changePage = (page) => {
 
    
 
-      <button :disabled="carregando" @click="createEvents" class="w-full py-2 bg-blue-500 text-white rounded-lg">
-        {{ carregando ? "Criando..." : "Criar evento(s)" }}
+      <button :disabled="carregando" @click="createEvents" class="w-1/2 mx-auto block  py-2 bg-slate-100 text-stone-900 rounded-lg">
+        {{ carregando ? "Criando..." : "Criar link(s) do(s) evento(s)" }}
       </button>
 
       <!-- ?? Lista de eventos criados -->
@@ -232,13 +251,21 @@ const changePage = (page) => {
 
           <span class="text-lg font-semibold">
             Descrição: 
-            <span :class="{'line-clamp-2': !event.showMore}">{{ event.description }}</span>
-            <button @click="event.showMore = !event.showMore" class="text-blue-300 mb-2">
-              {{ event.showMore ? 'Ver menos' : 'Ver mais' }}
-            </button>
+            <span>{{ event.description }}</span>
+            
+ 
           </span>
 
-          <a :href="event.link" target="_blank" class="text-sky-500">Acessar o Evento</a>
+          <span class="text-lg font-semibold">
+            Inicio: 
+            <span>{{ formatDate(event.start) }}</span>
+            <br/>
+            Fim:
+            <span>{{ formatDate(event.end) }}</span>
+ 
+          </span>
+
+          <a :href="event.link" target="_blank" class="text-sky-500">Acessar o link do evento</a>
         </div>
 
         <!-- Botões fixos -->
